@@ -1,19 +1,19 @@
 用法
 > pod 'ZHSmallVideo', '~> 0.0.1'
-#1 引入头文件
+# 1.引入头文件
 ```
  #import <ZHSmallVideoController.h>
 ```
-#2 调用小视频
+# 2.调用小视频
 ```
 ZHSmallVideoController *videoVc = [[ZHSmallVideoController alloc] initWithDelegate:self];
 [self presentViewController:videoVc animated:YES completion:nil];
 ```
-#3 签代理
+# 3.签代理
 ```
 <ZHSmallVideoControllerDelegate>
 ```
-#4 实现代理
+# 4.实现代理
 ```
 - (void)zh_delegateVideoInLocationUrl:(NSURL *)url {
     NSLog(@"视频存在本地的路径：%@", url);
