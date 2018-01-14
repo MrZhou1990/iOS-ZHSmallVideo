@@ -19,6 +19,6 @@ ZHSmallVideoController *videoVc = [[ZHSmallVideoController alloc] initWithDelega
 NSLog(@"视频存在本地的路径：%@", url);
 }
 ```
-可以将视频base64编码传给服务器，可以取视频第一帧图片用来展示给用户Demo里面都有。
+可以将视频base64编码传给服务器，可以取视频第一帧图片用来展示给用户Demo里面都有。  
 还附上了服务器端视频字符串解码的代码。
 
