@@ -35,7 +35,7 @@
 
 #pragma mark 创建捕捉会话
 - (void)zh_buildSession {
-    // 捕捉会话
+    // 捕获会话
     _captureSession = [[AVCaptureSession alloc] init];
     if ([_captureSession canSetSessionPreset:AVCaptureSessionPresetHigh]) {
         [_captureSession setSessionPreset:AVCaptureSessionPresetHigh];
@@ -171,6 +171,7 @@
 - (void)zh_startRecording:(ZHRecordButton *)button {
     _isSystemEndRecord = NO;
     [button zh_startRecording:^(BOOL finish, BOOL isEndRecord) {
+        NSLog(@"%d -- %d", isEndRecord, _isSystemEndRecord);
         if (isEndRecord && !_isSystemEndRecord) { // 抬起了按钮，并且系统未成功开始录制（未走录制成功的代理方法）
             _switchCameraBtn.hidden = NO;
             _cancelBtn.hidden = NO;
@@ -195,7 +196,7 @@
             if (![_output isRecording]) {
                 _switchCameraBtn.hidden = YES;
                 _cancelBtn.hidden = YES;
-                //                NSLog(@"开始录制视频...");
+//                NSLog(@"开始录制视频...");
                 AVCaptureConnection *captureConnection = [_output connectionWithMediaType:AVMediaTypeVideo];
                 captureConnection.videoOrientation = [_previewLayer connection].videoOrientation;
                 [_output startRecordingToOutputFileURL:({
