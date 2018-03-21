@@ -43,7 +43,8 @@
     // 捕捉输入
     // 摄像头
     NSError *videoError = nil;
-    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo] error:&videoError];
+    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo]
+                                                                             error:&videoError];
     if (!videoInput || videoError) {
         NSLog(@"摄像头设备创建失败");
         return;
@@ -57,7 +58,8 @@
     }
     // 麦克风
     NSError *audioError = nil;
-    AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio] error:&audioError];
+    AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio]
+                                                                             error:&audioError];
     if (!audioInput || audioError) {
         NSLog(@"麦克风设备创建失败");
         return;
