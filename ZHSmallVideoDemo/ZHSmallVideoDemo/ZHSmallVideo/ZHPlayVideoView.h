@@ -19,7 +19,6 @@ typedef enum : NSUInteger {
 typedef void(^ZHActionButtonBlock)(ZHActionButtonType btnType);
 
 @interface ZHPlayVideoView : UIView
-
 /**
  播放视频
  */

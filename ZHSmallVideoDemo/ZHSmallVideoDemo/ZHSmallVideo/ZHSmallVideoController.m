@@ -46,14 +46,18 @@
     AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo]
                                                                              error:&videoError];
     if (!videoInput || videoError) {
+#ifdef DEBUG
         NSLog(@"摄像头设备创建失败");
+#endif
         return;
     }
     if ([_captureSession canAddInput:videoInput]) {
         [_captureSession addInput:videoInput];
         _videoInput = videoInput;
     } else {
+#ifdef DEBUG
         NSLog(@"会话无法加入摄像头");
+#endif
         return;
     }
     // 麦克风
@@ -61,13 +65,17 @@
     AVCaptureDeviceInput *audioInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio]
                                                                              error:&audioError];
     if (!audioInput || audioError) {
+#ifdef DEBUG
         NSLog(@"麦克风设备创建失败");
+#endif
         return;
     }
     if ([_captureSession canAddInput:audioInput]) {
         [_captureSession addInput:audioInput];
     } else {
+#ifdef DEBUG
         NSLog(@"会话无法加入麦克风");
+#endif
         return;
     }
     // 视频输出
@@ -81,10 +89,12 @@
     if ([_captureSession canAddOutput:_output]) {
         [_captureSession addOutput:_output];
     } else {
+#ifdef DEBUG
         NSLog(@"会话无法加入输出设备");
+#endif
         return;
     }
-    // 添加录像图层
+    // 添加录像预览图层
     _previewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:_captureSession];
     _previewLayer.frame = CGRectMake(0.f, 0.f, [UIScreen mainScreen].bounds.size.width, [UIScreen mainScreen].bounds.size.height);
     _previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill; // 填充模式
