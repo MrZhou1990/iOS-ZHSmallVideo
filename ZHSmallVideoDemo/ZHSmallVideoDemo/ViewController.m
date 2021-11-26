@@ -30,6 +30,7 @@
 
 - (void)zh_record {
     ZHSmallVideoController *videoVc = [[ZHSmallVideoController alloc] initWithDelegate:self];
+    videoVc.modalPresentationStyle = UIModalPresentationFullScreen;
     [self presentViewController:videoVc animated:YES completion:nil];
 }
 
