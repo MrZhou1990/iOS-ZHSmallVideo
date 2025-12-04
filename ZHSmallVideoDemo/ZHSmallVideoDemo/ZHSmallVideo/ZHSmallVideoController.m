@@ -21,6 +21,10 @@
 @property(nonatomic, assign)BOOL isSystemEndRecord; // 记录系统是否成功结束了录制
 @property(nonatomic, weak)AVCaptureDeviceInput *videoInput;
 @property(nonatomic, weak)id<ZHSmallVideoControllerDelegate> zh_delegate;
+// 视频输入设备（摄像头）
+@property (nonatomic, strong) AVCaptureDevice *videoDevice;
+// 会话队列（保证线程安全）
+@property (nonatomic, strong) dispatch_queue_t sessionQueue;
 @end
 
 @implementation ZHSmallVideoController
@@ -33,6 +37,33 @@
     return self;
 }
 
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor blackColor];
+    // 初始化会话队列
+    self.sessionQueue = dispatch_queue_create("com.example.zoomSessionQueue", DISPATCH_QUEUE_SERIAL);
+    [self zh_buildSession]; // 创建会话
+    [self zh_buildUI]; // 这个要在创建会话之后创建
+    [self zh_addPinchGesture]; // 添加缩放手势
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    // 将摄像头画面展示在屏幕上
+    [_captureSession startRunning];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+}
+
+
 #pragma mark 创建捕捉会话
 - (void)zh_buildSession {
     // 捕获会话
@@ -43,7 +74,8 @@
     // 捕捉输入
     // 摄像头
     NSError *videoError = nil;
-    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:[AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo]
+    self.videoDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+    AVCaptureDeviceInput *videoInput = [AVCaptureDeviceInput deviceInputWithDevice:self.videoDevice
                                                                              error:&videoError];
     if (!videoInput || videoError) {
 #ifdef DEBUG
@@ -157,27 +189,46 @@
     }
 }
 
-- (void)loadView {
-    [super loadView];
-    self.view.backgroundColor = [UIColor blackColor];
-    [self zh_buildSession]; // 创建会话
-    [self zh_buildUI]; // 这个要在创建会话之后创建
+- (void)zh_addPinchGesture {
+    UIPinchGestureRecognizer *pinchGesture = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(zh_handlePinchGesture:)];
+    [self.view addGestureRecognizer:pinchGesture];
 }
 
-- (void)viewWillAppear:(BOOL)animated {
-    [super viewWillAppear:animated];
-    [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationNone];
-}
+- (void)zh_handlePinchGesture:(UIPinchGestureRecognizer *)gesture {
+    // 确保摄像头设备可用
+        if (!self.videoInput) return;
 
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    // 将摄像头画面展示在屏幕上
-    [_captureSession startRunning];
-}
+        // 手势缩放比例（scale > 1 放大，scale < 1 缩小）
+        CGFloat scale = gesture.scale;
+        dispatch_async(self.sessionQueue, ^{
+            // 1. 锁定设备配置（必须）
+            NSError *error;
+            if ([self.videoDevice lockForConfiguration:&error]) {
+                // 2. 计算目标变焦倍数
+                CGFloat currentZoom = self.videoDevice.videoZoomFactor;
+                CGFloat targetZoom = currentZoom * scale;
+                // 3. 限制变焦范围（1.0 ~ 最大倍数）
+                CGFloat maxZoom = self.videoDevice.maxAvailableVideoZoomFactor;
+                targetZoom = MAX(1.0, MIN(targetZoom, maxZoom));
 
-- (void)viewWillDisappear:(BOOL)animated {
-    [super viewWillDisappear:animated];
-    [[UIApplication sharedApplication] setStatusBarHidden:NO];
+                // 方案1：直接变焦（瞬间完成）
+                // self.videoDevice.videoZoomFactor = targetZoom;
+
+                // 方案2：平滑变焦（推荐，渐变效果）
+                if (gesture.state == UIGestureRecognizerStateChanged) {
+                    // 速率：0.0 ~ 1.0（值越大变焦越快）
+                    [self.videoDevice rampToVideoZoomFactor:targetZoom withRate:1];
+                }
+
+                // 4. 解锁设备配置
+                [self.videoDevice unlockForConfiguration];
+            } else {
+                NSLog(@"锁定设备配置失败：%@", error.localizedDescription);
+            }
+        });
+
+        // 重置手势缩放比例（避免累积）
+        gesture.scale = 1.0;
 }
 
 - (void)zh_startRecording:(ZHRecordButton *)button {
